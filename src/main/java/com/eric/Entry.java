@@ -24,7 +24,7 @@ public class Entry implements Comparable<Entry> {
     public static final String TIME_FORMAT = DATE_FORMAT + "'T'HHmmss";
     private static final String[] DATE_FORMATS = { TIME_FORMAT + "Z", TIME_FORMAT, DATE_FORMAT };
 
-    private static long parseDate(final String str, TimeZone tz, final String... parsePatterns) {
+    private static Long parseDate(final String str, TimeZone tz, final String... parsePatterns) {
         for (String pattern : parsePatterns) {
             try {
                 return FastDateFormat.getInstance(pattern, tz).parse(str).getTime();
@@ -32,13 +32,19 @@ public class Entry implements Comparable<Entry> {
             }
         }
 
-        return 0L;
+        return null;
     }
 
     public static Entry parse(File file, char tagSeparator, TimeZone tz, int baseDirLength) {
         Entry entry = new Entry();
 
         entry.path = file.getAbsolutePath().substring(baseDirLength);
+        entry.m = file.lastModified();
+
+        if (file.length() > 0) {
+            entry.s = file.length();
+        }
+
         String title = trim(FilenameUtils.getBaseName(entry.path));
 
         String part = substringBefore(title, " ");
@@ -47,9 +53,7 @@ public class Entry implements Comparable<Entry> {
             entry.ts = parseDate(part, tz, DATE_FORMATS);
         }
 
-        if (entry.ts == 0) {
-            entry.ts = file.lastModified(); // default to the last modified of the file
-        } else {
+        if (entry.ts != null) {
             title = trim(substringAfter(title, " ")); // successfully pulled the time off
         }
 
@@ -90,7 +94,11 @@ public class Entry implements Comparable<Entry> {
 
     private String author;
 
-    private long ts;
+    private Long ts;
+
+    private long m;
+
+    private Long s;
 
     public void setAuthor(String author) {
         this.author = author;
@@ -117,11 +125,11 @@ public class Entry implements Comparable<Entry> {
     }
 
     public long getTimestamp() {
-        return ts;
+        return ts == null ? m : ts;
     }
 
     @Override
     public int compareTo(Entry o) {
-        return Long.compare(o.ts, ts);
+        return Long.compare(o.getTimestamp(), getTimestamp());
     }
 }

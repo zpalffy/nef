@@ -95,7 +95,7 @@ public class NefTransform implements Callable<Integer> {
 		gson = builder.create();
 
 		for (Path path : paths) {
-			processDir(path.toFile(), path.toString().length());
+			processDir(path.toFile(), path.toAbsolutePath().toString().length());
 		}
 		return 0;
 	}
