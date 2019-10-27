@@ -10,11 +10,10 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.google.guava:guava:26.0-jre'
-    implementation 'com.eric:cli:0.3'
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'commons-io:commons-io:2.6'
     implementation 'org.apache.commons:commons-lang3:3.8.1'
+    implementation 'info.picocli:picocli:4.0.4'
     
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
