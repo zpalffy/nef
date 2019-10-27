@@ -22,7 +22,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
-@Command(name = "nef", mixinStandardHelpOptions = true, version = "nef 1.0", description = "Prints the checksum (MD5 by default) of a file to STDOUT.")
+@Command(name = "nef", mixinStandardHelpOptions = true, version = { "nef 1.0",
+		"https://github.com/zpalffy/nef" }, description = "Utility to generate json metadata file for writing entries in directories.")
 public class NefTransform implements Callable<Integer> {
 
 	@Parameters(description = "The directory to work from.  Defaults to the current directory (${DEFAULT-VALUE})")
