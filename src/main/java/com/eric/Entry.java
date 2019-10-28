@@ -40,10 +40,7 @@ public class Entry implements Comparable<Entry> {
 
         entry.path = file.getAbsolutePath().substring(baseDirLength);
         entry.m = file.lastModified();
-
-        if (file.length() > 0) {
-            entry.s = file.length();
-        }
+        entry.s = file.length() > 0 ? file.length() : null;
 
         String title = trim(FilenameUtils.getBaseName(entry.path));
 

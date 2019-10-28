@@ -24,7 +24,7 @@ import picocli.CommandLine.Parameters;
 public class NefTransform implements Callable<Integer> {
 
 	@Parameters(description = "The directory to work from.  Defaults to the current directory (${DEFAULT-VALUE})")
-	private Path dir = Paths.get(".");
+	private Path directory = Paths.get(".");
 
 	@Option(names = { "--extensions",
 			"-e" }, description = "The file extensions to consider when creating entries.  Note: do not include the '.' character (default: ${DEFAULT-VALUE})")
@@ -34,7 +34,7 @@ public class NefTransform implements Callable<Integer> {
 			"-a" }, description = "The default author to use if one is not specified for an entry.")
 	private String defaultAuthor;
 
-	@Option(names = { "--pretty-print", "-p" }, description = "Pretty print all json files.")
+	@Option(names = { "--pretty-print", "-p" }, description = "Pretty print json.")
 	private boolean prettyPrint;
 
 	@Option(names = { "--recursive", "-r" }, description = "Searches all subdirectories.")
@@ -46,7 +46,7 @@ public class NefTransform implements Callable<Integer> {
 
 	@Option(names = { "--time-zone",
 			"-z" }, description = "The time zone to use when parsing date/times in file names (default: ${DEFAULT-VALUE})")
-	private ZoneId zone = ZoneId.systemDefault();
+	private ZoneId timezone = ZoneId.systemDefault();
 
 	private Gson gson;
 
@@ -54,7 +54,7 @@ public class NefTransform implements Callable<Integer> {
 		List<Entry> entries = new ArrayList<>();
 		for (File file : FileUtils.listFiles(dir, extensions, recursive)) {
 			if (!file.isHidden()) {
-				Entry entry = Entry.parse(file, tagSeparator, TimeZone.getTimeZone(zone), baseDirLength);
+				Entry entry = Entry.parse(file, tagSeparator, TimeZone.getTimeZone(timezone), baseDirLength);
 				if (entry.getAuthor() == null && defaultAuthor != null) {
 					entry.setAuthor(defaultAuthor);
 				}
@@ -66,6 +66,8 @@ public class NefTransform implements Callable<Integer> {
 		if (!entries.isEmpty()) {
 			entries.sort(null); // sort by natural order, aka timestamp
 			System.out.println(gson.toJson(entries));
+		} else {
+			System.err.println("No entries were found in " + dir);
 		}
 	}
 
@@ -77,7 +79,7 @@ public class NefTransform implements Callable<Integer> {
 		}
 		gson = builder.create();
 
-		processDir(dir.toFile(), dir.toAbsolutePath().toString().length());
+		processDir(directory.toFile(), directory.toAbsolutePath().toString().length());
 		return 0;
 	}
 

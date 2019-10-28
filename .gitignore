@@ -4,6 +4,7 @@ build/
 .classpath
 .project
 .settings
+entries.json
 
 # Ignore Gradle GUI config
 gradle-app.setting
