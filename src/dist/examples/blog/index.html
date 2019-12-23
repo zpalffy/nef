@@ -1,1 +1,47 @@
-<h1>Hello World!</h1>
+<!doctype html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/darkly/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+          <a class="navbar-brand" href="#">Navbar</a>
+          
+          <form class="form-inline my-2 my-lg-0">
+            <input class="form-control mr-sm-2" type="text" placeholder="Search">
+            <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+          </form>
+        </nav>
+      </div>
+    </div>
+    <div class="row">
+      <div class="">
+        <h1>Hello World!</h1>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lunr.js/2.3.8/lunr.min.js"></script>
+  <script>
+    var idx;
+    $.when($.get("settings.json"), $.get("entries.json"), $.getJSON("lunr-index.json")).then((s, e, i) => {
+      var settings = s[0], entries = e[0];
+      console.info(settings);
+      console.info(entries);
+
+      idx = lunr.Index.load(i[0]);
+    });
+  </script>
+</body>
+
+</html>

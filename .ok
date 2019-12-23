@@ -2,4 +2,4 @@ open https://github.com/secretGeek/ok-bash # open the doc for the ok script
 open https://github.com/zpalffy/nef # open the nef github page
 ./gradlew clean installdist && build/install/nef/bin/nef -h # build and get the help
 build/install/nef/bin/nef -p src/dist/examples/blog > src/dist/examples/blog/entries.json # generate json for the example blog
-http-server src/dist/examples/ -o -c-1 # start the server and open browser, see: https://www.npmjs.com/package/http-server
+http-server src/dist/examples/blog -o -c-1 # start the server and open browser, see: https://www.npmjs.com/package/http-server

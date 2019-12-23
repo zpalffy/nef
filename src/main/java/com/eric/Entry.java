@@ -10,8 +10,11 @@ import static org.apache.commons.lang3.StringUtils.substringBetween;
 import static org.apache.commons.lang3.StringUtils.trim;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.TimeZone;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -38,6 +41,7 @@ public class Entry implements Comparable<Entry> {
     public static Entry parse(File file, char tagSeparator, TimeZone tz, int baseDirLength) {
         Entry entry = new Entry();
 
+        entry.file = file;
         entry.path = file.getAbsolutePath().substring(baseDirLength);
         entry.m = file.lastModified();
         entry.s = file.length() > 0 ? file.length() : null;
@@ -81,6 +85,10 @@ public class Entry implements Comparable<Entry> {
         return entry;
     }
 
+    public static Charset CHARSET = Charset.defaultCharset();
+
+    private transient File file;
+
     private String title;
 
     private String path;
@@ -96,6 +104,10 @@ public class Entry implements Comparable<Entry> {
     private long m;
 
     private Long s;
+
+    public String getContents() throws IOException {
+        return FileUtils.readFileToString(file, CHARSET);
+    }
 
     public void setAuthor(String author) {
         this.author = author;

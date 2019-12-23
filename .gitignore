@@ -5,6 +5,7 @@ build/
 .project
 .settings
 entries.json
+lunr-index.json
 
 # Ignore Gradle GUI config
 gradle-app.setting

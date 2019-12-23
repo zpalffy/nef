@@ -1,13 +1,21 @@
 package com.eric;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
+
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -23,8 +31,8 @@ import picocli.CommandLine.Parameters;
 		"@|underline https://github.com/zpalffy/nef|@" }, description = "Utility to generate json metadata for entries.")
 public class NefTransform implements Callable<Integer> {
 
-	@Parameters(description = "The directory to work from.  Defaults to the current directory (${DEFAULT-VALUE})")
-	private Path directory = Paths.get(".");
+	@Parameters(description = "The directory to work from.")
+	private Path directory;
 
 	@Option(names = { "--extensions",
 			"-e" }, description = "The file extensions to consider when creating entries.  Note: do not include the '.' character (default: ${DEFAULT-VALUE})")
@@ -48,6 +56,14 @@ public class NefTransform implements Callable<Integer> {
 			"-z" }, description = "The time zone to use when parsing date/times in file names (default: ${DEFAULT-VALUE})")
 	private ZoneId timezone = ZoneId.systemDefault();
 
+	@Option(names = { "--charset",
+			"-c" }, description = "The character set to use when reading and writing files. (default: ${DEFAULT-VALUE})")
+	private Charset charset = Charset.defaultCharset();
+
+	@Option(names = { "--index",
+			"-i" }, description = "Builds a lunr search index over the entries and their contents and stores the results.  Beware this could significantly slow down the command as each entry is loaded and indexed.  See lunrjs.com")
+	private boolean index;
+
 	private Gson gson;
 
 	private void processDir(File dir, int baseDirLength) throws Exception {
@@ -60,15 +76,30 @@ public class NefTransform implements Callable<Integer> {
 				}
 
 				entries.add(entry);
+
 			}
 		}
 
 		if (!entries.isEmpty()) {
 			entries.sort(null); // sort by natural order, aka timestamp
-			System.out.println(gson.toJson(entries));
+			FileUtils.writeStringToFile(directory.resolve("entries.json").toFile(), gson.toJson(entries), charset);
+
+			if (index) {
+				buildIndex(entries);
+			}
 		} else {
 			System.err.println("No entries were found in " + dir);
 		}
+	}
+
+	private void buildIndex(List<Entry> entries)
+			throws MalformedURLException, ScriptException, IOException, NoSuchMethodException {
+
+		ScriptEngine js = new ScriptEngineManager().getEngineByExtension("js");
+		js.eval(new InputStreamReader(getClass().getResourceAsStream("/index.js")));
+
+		Object retVal = ((Invocable) js).invokeFunction("index", entries, prettyPrint);
+		FileUtils.writeStringToFile(directory.resolve("lunr-index.json").toFile(), retVal.toString(), charset);
 	}
 
 	@Override
@@ -78,6 +109,7 @@ public class NefTransform implements Callable<Integer> {
 			builder.setPrettyPrinting();
 		}
 		gson = builder.create();
+		Entry.CHARSET = charset;
 
 		processDir(directory.toFile(), directory.toAbsolutePath().toString().length());
 		return 0;
