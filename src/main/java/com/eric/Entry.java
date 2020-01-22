@@ -50,7 +50,9 @@ public class Entry implements Comparable<Entry> {
         String part = substringBefore(title, " ");
         entry.ts = parseDate(part, tz, DATE_FORMATS);
 
-        if (entry.ts != null) {
+        if (entry.ts == null) {
+            entry.ts = entry.m;
+        } else {
             title = trim(substringAfter(title, " ")); // successfully pulled the time off
         }
 
