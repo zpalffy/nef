@@ -27,7 +27,7 @@
       <a href="/sitemap.xml">Sitemap</a>
     </nav>
     <span class="newthought"></span>
-    
+
     <div class="container">
       <script id="entry" type="text/x-handlebars">
         <article>
@@ -47,7 +47,7 @@
             {{/each}}
           {{/if}}  
 
-          <section data-entry-contents="{{path}}"/>
+          <section class="contents" />
         </article>
       </script>
     </div>
@@ -64,13 +64,33 @@
       });
 
       Handlebars.registerHelper("sidenote", function(val) {
-        var id = '_' + Math.random().toString(36).substr(2, 9);
+        var id = 'note_' + Math.random().toString(36).substr(2, 9);
         return new Handlebars.SafeString('<label for="' + id + '" class="margin-toggle sidenote-number"></label><input type="checkbox" id="' + id + '" class="margin-toggle"/><span class="sidenote">' + val + '</span>');
       });
 
       Handlebars.registerHelper("formatDate", function(date, format) {
         return moment(date).format(format);
       });
+
+      var pageSize = 5, infiniteScrollOffset = 400;
+
+      var loadContents = function(ele, path) {
+          $.get(path).then(contents => {
+            ele.append(marked(Handlebars.compile(contents)())); // could pass some things in here?
+          });
+      };
+
+      var loadNextEntries = function() {
+        var remaining = $(document).data('entries'), entries = remaining.slice(0, pageSize);
+        if (entries.length === 0) return;
+        $(document).data('entries', remaining.slice(pageSize));
+
+        for (entry of entries) {
+          var ele = $(template(entry));
+          $('.container').append(ele);
+          loadContents(ele.find('section.contents'), entry.path);
+        }
+      };
 
       var template = Handlebars.compile($('#entry').text());
       $.when($.get('entries.json')).then((entries) => {
@@ -80,21 +100,18 @@
         var hash = window.location.hash.substr(2);
         if (hash) {
           entries = hash.split(',').map(s => entries.find(e => e.slug === s));
-          //entries = entries.filter(e => .includes(e.slug));
         }
 
-        for (entry of entries) {
-          $('.container').append(template(entry));
-        }
-
-        $('[data-entry-contents]').each((i, e) => {
-          var ele = $(e);
-          $.get(ele.data('entry-contents')).then(contents => {
-            ele.append(marked(Handlebars.compile(contents)())); // could pass some things in here?
-          });
-        });
+        $(document).data('entries', entries);
+        loadNextEntries();
       });
 
+      // inifinite scroll stuff:
+      $(window).scroll(function() {
+        if ( $(this).scrollTop() > $(document).height() - $(window).height() - infiniteScrollOffset) {
+          loadNextEntries();
+        }
+      });
     </script>
   </body>
 </html>
