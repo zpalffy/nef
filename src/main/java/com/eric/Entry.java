@@ -44,15 +44,11 @@ public class Entry implements Comparable<Entry> {
         entry.file = file;
         entry.path = file.getAbsolutePath().substring(baseDirLength);
         entry.m = file.lastModified();
-        entry.s = file.length() > 0 ? file.length() : null;
+        entry.s = file.length();
 
         String title = trim(FilenameUtils.getBaseName(entry.path));
-
         String part = substringBefore(title, " ");
-        if (!part.equals(title)) {
-            // try to pull off the date:
-            entry.ts = parseDate(part, tz, DATE_FORMATS);
-        }
+        entry.ts = parseDate(part, tz, DATE_FORMATS);
 
         if (entry.ts != null) {
             title = trim(substringAfter(title, " ")); // successfully pulled the time off
@@ -103,7 +99,7 @@ public class Entry implements Comparable<Entry> {
 
     private long m;
 
-    private Long s;
+    private long s;
 
     public String getContents() throws IOException {
         return FileUtils.readFileToString(file, CHARSET);

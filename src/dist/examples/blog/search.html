@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Hello, world!</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.7.2/tufte.min.css" />
+  </head>
+  <body>
+    <div class="container">
+      <article>
+        <form>
+          <input type="search" id="entry-search" size="50" disabled="disabled" />
+          <input type="submit" value="Search" />
+        </form>
+      </article>
+
+      <div id="results" />
+
+      <script id="result" type="text/x-handlebars">
+        {{#if results}}
+          {{#if multiple}}
+            <p class="subtitle">{{results.length}} entries found.</p>
+            <a href="/#/{{slugs}}">Show all</a>
+          {{else}}
+            <p class="subtitle">1 entry found.</p>
+          {{/if}}
+
+          <ol>
+            {{#each results}}
+              <li><a href="/#/{{slug}}">{{entryTitle}}</a>, <em>{{formatDate this.ts 'YYYY-M-D'}}</em></li>
+            {{/each}}
+          </ol>
+
+        {{else}}
+          <p class="subtitle">No entries found.</p>
+        {{/if}}
+      </script>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.2/handlebars.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lunr.js/2.3.8/lunr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/zpalffy/jquery-helpers/handlebars-helpers.min.js"></script>
+
+    <script>
+      Handlebars.registerHelper("entryTitle", function() {
+        return this.title || moment(this.ts).format('MMMM Do, YYYY');
+      });
+
+      var template = Handlebars.compile($('#result').text());
+      $.when($.get('lunr-index.json'), $.get('entries.json')).then((i, e) => {
+        var idx = lunr.Index.load(i[0]);
+
+        $('#entry-search').prop('disabled', false).focus();
+
+        $(document).on('submit', 'form', function() {
+          var results = idx.search($("#entry-search").val()).map(r => e[0].find(e => r.ref === e.slug));
+          var now = Date.now();
+          results = results.filter(e => now >= e.ts);
+
+          $('#results').empty().append(template({
+            results: results,
+            slugs: results.map(r => r.slug),
+            multiple: results.length > 1
+          }));
+
+          return false;
+        });
+      });
+    </script>
+  </body>
+</html>

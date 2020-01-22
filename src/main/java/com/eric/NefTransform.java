@@ -1,11 +1,14 @@
 package com.eric;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,17 +28,20 @@ import org.apache.commons.io.FileUtils;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
 
 @Command(name = "nef", mixinStandardHelpOptions = true, version = { "@|bold,magenta nef|@ 1.0",
 		"@|underline https://github.com/zpalffy/nef|@" }, description = "Utility to generate json metadata for entries.")
 public class NefTransform implements Callable<Integer> {
 
-	@Parameters(description = "The directory to work from.")
-	private Path directory;
+	@Option(names = { "--directory",
+			"-d" }, description = "The directory to consider for entries.  Defaults to current.")
+	private Path directory = Paths.get(".");
 
-	@Option(names = { "--extensions",
-			"-e" }, description = "The file extensions to consider when creating entries.  Note: do not include the '.' character (default: ${DEFAULT-VALUE})")
+	@Option(names = { "--entries",
+			"-e" }, description = "Write the entries.json file.  If not used, this is written to sysout.")
+	private boolean writeJson;
+
+	@Option(names = "--extensions", description = "The file extensions to consider when creating entries.  Note: do not include the '.' character (default: ${DEFAULT-VALUE})")
 	private String[] extensions = new String[] { "md", "markdown", "txt" };
 
 	@Option(names = { "--author",
@@ -69,7 +75,7 @@ public class NefTransform implements Callable<Integer> {
 	private void processDir(File dir, int baseDirLength) throws Exception {
 		List<Entry> entries = new ArrayList<>();
 		for (File file : FileUtils.listFiles(dir, extensions, recursive)) {
-			if (!file.isHidden()) {
+			if (!file.isHidden() && file.length() > 0) {
 				Entry entry = Entry.parse(file, tagSeparator, TimeZone.getTimeZone(timezone), baseDirLength);
 				if (entry.getAuthor() == null && defaultAuthor != null) {
 					entry.setAuthor(defaultAuthor);
@@ -82,7 +88,17 @@ public class NefTransform implements Callable<Integer> {
 
 		if (!entries.isEmpty()) {
 			entries.sort(null); // sort by natural order, aka timestamp
-			FileUtils.writeStringToFile(directory.resolve("entries.json").toFile(), gson.toJson(entries), charset);
+
+			if (writeJson) {
+				try (BufferedWriter br = Files.newBufferedWriter(directory.resolve("entries.json"), charset)) {
+					gson.toJson(entries, br);
+				}
+			} else {
+				gson.toJson(entries, System.out);
+			}
+
+			// FileUtils.writeStringToFile(directory.resolve("entries.json").toFile(),
+			// gson.toJson(entries), charset);
 
 			if (index) {
 				buildIndex(entries);

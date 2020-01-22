@@ -6,6 +6,7 @@ build/
 .settings
 entries.json
 lunr-index.json
+.DS_Store
 
 # Ignore Gradle GUI config
 gradle-app.setting
