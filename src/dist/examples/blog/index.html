@@ -18,6 +18,15 @@
       nav a:not(:first-child) {
         margin-left: 1em;
       }
+
+      .contents p:first-child:first-letter {
+        float: left;
+        font-size: 65px;
+        line-height: 60px;
+        padding-top: 4px;
+        padding-right: 8px;
+        padding-left: 3px;
+      }
     </style>
   </head>
   <body>
@@ -43,9 +52,9 @@
           {{#if tags}}
             Tags:
             {{#each tags}}
-              {{this}}
+              <a class="tag" href="/#/tag/{{this}}">{{this}}</a>
             {{/each}}
-          {{/if}}  
+          {{/if}}
 
           <section class="contents" />
         </article>
@@ -72,12 +81,13 @@
         return moment(date).format(format);
       });
 
-      var pageSize = 5, infiniteScrollOffset = 400;
+      var pageSize = 5, infiniteScrollOffset = 400, template = Handlebars.compile($('#entry').text());;
 
       var loadContents = function(ele, path) {
-          $.get(path).then(contents => {
-            ele.append(marked(Handlebars.compile(contents)())); // could pass some things in here?
-          });
+        ele.hide();
+        $.get(path).then(contents => {
+          ele.append(marked(Handlebars.compile(contents)())).slideDown(400); // could pass some things in here?
+        });
       };
 
       var loadNextEntries = function() {
@@ -86,25 +96,33 @@
         $(document).data('entries', remaining.slice(pageSize));
 
         for (entry of entries) {
-          var ele = $(template(entry));
-          $('.container').append(ele);
+          var ele = $(template(entry)).hide();
+          $('.container').append(ele.fadeIn(600));
           loadContents(ele.find('section.contents'), entry.path);
         }
       };
 
-      var template = Handlebars.compile($('#entry').text());
-      $.when($.get('entries.json')).then((entries) => {
-        var now = Date.now();
-        entries = entries.filter(e => now >= e.ts); // filter future entries
+      var initialLoad = function() {
+        $('.container').empty();
+        $.when($.get('entries.json')).then((entries) => {
+          var now = Date.now();
+          entries = entries.filter(e => now >= e.ts); // filter future entries
 
-        var hash = window.location.hash.substr(2);
-        if (hash) {
-          entries = hash.split(',').map(s => entries.find(e => e.slug === s));
-        }
+          var hash = window.location.hash.substr(2);
+          if (hash) {
+            if (hash.startsWith('tag/')) { // by tag:
+              entries = entries.filter(e => e.tags && e.tags.includes(hash.substr(4)));
+            } else { // by entry
+              entries = hash.split(',').map(s => entries.find(e => e.slug === s));
+            }
+          }
 
-        $(document).data('entries', entries);
-        loadNextEntries();
-      });
+          $(document).data('entries', entries);
+          loadNextEntries();
+        });
+      }      
+
+      $(document).on('click', 'a.tag', initialLoad);
 
       // inifinite scroll stuff:
       $(window).scroll(function() {
@@ -112,6 +130,8 @@
           loadNextEntries();
         }
       });
+
+      initialLoad();
     </script>
   </body>
 </html>

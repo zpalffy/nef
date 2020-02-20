@@ -8,13 +8,25 @@
     <title>Hello, world!</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.7.2/tufte.min.css" />
+
+    <style>
+    form input {
+      width: 85%;
+      height: 40px;
+      padding: 0.5em 1em;
+      border: 0;
+      background: #eee;
+      border-radius: 5px 0 0 5px;
+      font-size: 22px;
+    }
+    </style>
   </head>
   <body>
     <div class="container">
       <article>
         <form>
-          <input type="search" id="entry-search" size="50" disabled="disabled" />
-          <input type="submit" value="Search" />
+          <input placeholder="Search terms..." type="search" id="entry-search" size="50" disabled="disabled" />
+          <!--input type="submit" value="Search" /-->
         </form>
       </article>
 
@@ -31,7 +43,10 @@
 
           <ol>
             {{#each results}}
-              <li><a href="/#/{{slug}}">{{entryTitle}}</a>, <em>{{formatDate this.ts 'YYYY-M-D'}}</em></li>
+              <li>
+                <a href="/#/{{slug}}">{{entryTitle}}</a>,
+                <em>{{formatDate this.ts 'YYYY-M-D'}}</em>
+              </li>
             {{/each}}
           </ol>
 
